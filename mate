@@ -203,7 +203,8 @@ switch($argv[1]) {
         print "\nMagento ".$version." installed.\n\n";
         break;
     default;
-        print "\nMate (command line Magento toolkit) - by Elgentos <peterjaap@elgentos.nl>\n\n";
+        print "\nMate (command line Magento toolkit) - by Peter Jaap Blaakmeer <peterjaap@elgentos.nl>\n";
+        print "Copyright (C) 2012 Elgentos - released under GPL license\n\n";
         print "mate index/indexer <default indexer options>\n";
         print "    --status <indexer>            Show Indexer(s) Status
     --mode <indexer>              Show Indexer(s) Index Mode
