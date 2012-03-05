@@ -1,0 +1,318 @@
+#!/usr/bin/php
+<?
+// Define present working dir & thus root
+$pwd = trim(`pwd`);
+$root = false;
+if(stripos($pwd,'/app')!==false) {
+    $pathParts = explode('/',$pwd);
+    $root = "/";
+    foreach($pathParts as $part) { if($part=="app") { break; } $root .= "/".$part; }
+} else {
+    foreach(explode("\n",`ls`) as $listing) {
+        if($listing=="app") { $root = $pwd; }
+    }
+}
+if(!$root AND $argv[1]!="install") {
+    print "\nMagento installation not recognized; are you in the correct directory?\n\n";
+    exit;
+}
+
+if(!isset($argv[1])) { $argv[1] = null; }
+
+switch($argv[1]) {
+    case 'modules':
+    case 'mod':
+    case 'module':
+        echo "\nFound modules;\n\n";
+        moduleOverview($root);
+        break;
+    case 'enable':
+            if(empty($argv[2])) {
+                echo "\nPlease pass along modules name. Here is the list;\n\n";
+                moduleOverview($root);
+                exit;
+            }
+            if(stripos($argv[2],"_")!==false) {
+                $filename = $argv[2].".xml";
+            } else {
+                if(empty($argv[3])) { echo "Missing arguments"; exit; }
+                $filename = $argv[2]."_".$argv[3].".xml";
+            }
+            $moduleXml = $root."/app/etc/modules/".$filename;
+            if(isModuleEnabled($moduleXml)) {
+                echo "\nModule ".str_replace(".xml","",$filename)." is already enabled\n\n";
+            } else {
+                shell_exec("sed -i 's/false/true/' ".$moduleXml);
+                echo "\nModule ".str_replace(".xml","",$filename)." is now enabled\n\n";
+            }
+        break;
+    case 'disable':
+            if(empty($argv[2])) {
+                echo "\nPlease pass along modules name. Here is the list;\n\n";
+                moduleOverview($root);
+                exit;
+            }
+            if(stripos($argv[2],"_")!==false) {
+                $filename = $argv[2].".xml";
+            } else {
+                if(empty($argv[3])) { echo "Missing arguments"; exit; }
+                $filename = $argv[2]."_".$argv[3].".xml";
+            }
+            $moduleXml = $root."/app/etc/modules/".$filename;
+            if(!isModuleEnabled($moduleXml)) {
+                echo "\nModule ".str_replace(".xml","",$filename)." is already disabled\n\n";
+            } else {
+                shell_exec("sed -i 's/true/false/' ".$moduleXml);
+                echo "\nModule ".str_replace(".xml","",$filename)." is now disabled\n\n";
+            }
+        break;
+    case 'toggle':
+            if(empty($argv[2])) {
+                echo "\nPlease pass along modules name. Here is the list;\n\n";
+                foreach(explode("\n",shell_exec('ls '.$root."/app/etc/modules")) as $xml) {
+                    if(!empty($xml)) {
+                    echo str_replace(".xml","",$xml);
+                    if(isModuleEnabled($root."/app/etc/modules/".$xml)) { echo " - enabled"; } else { echo " - disabled"; }
+                    }
+                    echo "\n";
+                }
+                exit;
+            }
+            if(stripos($argv[2],"_")!==false) {
+                $filename = $argv[2].".xml";
+            } else {
+                if(empty($argv[3])) { echo "Missing arguments"; exit; }
+                $filename = $argv[2]."_".$argv[3].".xml";
+            }
+            $moduleXml = $root."/app/etc/modules/".$filename;
+            if(isModuleEnabled($moduleXml)) {
+                shell_exec("sed -i 's/true/false/' ".$moduleXml);
+                echo "\nModule ".str_replace(".xml","",$filename)." is now disabled\n\n";
+            } else {
+                shell_exec("sed -i 's/false/true/' ".$moduleXml);
+                echo "\nModule ".str_replace(".xml","",$filename)." is now enabled\n\n";
+            }
+        break;
+    case 'resetmods':
+        shell_exec("find ".$root." -type d -exec chmod 775 {} \;");
+        shell_exec("find ".$root." -type f -exec chmod 664 {} \;");
+        echo "\nPermissions are reset.\n\n";
+        break;
+    case 'backup':
+        $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
+        $info = (array)$local->global->resources->default_setup->connection;
+        shell_exec("mysqldump -u ".$info['username']." -p".$info['password']." --skip-extended-insert ".$info['dbname']." > database.sql");
+        print "\nBackup made at ".date("d-m-Y H:i:s")."; filename is database.sql\n\n";
+        break;
+    case 'hints':
+        connectDb($root);
+        if($argv[2]=="admin") {
+            $storeId = 0;
+            $switch = $argv[3];
+        } else {
+            if(is_numeric($argv[2])) {
+                $storeId = $argv[2];
+                $switch = $argv[3];
+            } else { // default to '1'
+                $storeId = 1;
+                $switch = $argv[2];
+            }
+        }
+        $enable = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', $storeId, 'dev/debug/template_hints', 1), ('default', $storeId, 'dev/debug/template_hints_blocks', 1)  ON DUPLICATE KEY UPDATE value=1;";
+        $disable = "DELETE FROM core_config_data WHERE path LIKE 'dev/debug/template_hints%' AND scope_id = '".$storeId."'";
+        if($switch=="on") {
+            mysql_query($enable) or die(mysql_error());
+            clearCache($root);
+            echo "\n";
+            if($storeId==0) { echo "Admin "; }
+            echo "Template hints are now enabled.\n\n";
+        } elseif($switch=="off") {
+            mysql_query($disable) or die(mysql_error());
+            clearCache($root);
+            echo "\n";
+            if($storeId==0) { echo "Admin "; }
+            echo "Template hints are now disabled.\n\n";
+        }
+        break;
+    case 'cc': // fallthrough
+    case 'cache':
+        clearCache($root);
+        print "\nCache is cleared.\n\n";
+        break;
+    case 'cs': // fallthrough
+    case 'sessions': // fallthrough
+    case 'session':
+        shell_exec("rm -rf ".$root."/var/session/*");
+        print "\nSessions are cleared.\n\n";
+        break;
+    case 'index': // fallthrough
+    case 'indexer':
+        ($argument = isset($argv[2]) ? $argv[2] : null);
+        print shell_exec('php '.$root.'/shell/indexer.php '.$argument);
+        break;
+    case 'compiler':
+        ($argument = isset($argv[2]) ? $argv[2] : null);
+        echo shell_exec('php '.$root.'/shell/compiler.php '.$argument);
+        break;
+    case 'cron':
+        shell_exec('php '.$root.'/cron.php');
+        echo "\nCron run at ".date("d-m-Y H:i:s")."\n\n";
+        break;
+    case 'install':
+        ($argument = isset($argv[2]) ? $argv[2] : null);
+        print shell_exec('sh '.$root.'/mage install '.$argument);
+        break;
+    case 'connect':
+        shell_exec("chmod +x ".$root."/mage");
+        $argument = null;
+        foreach($argv as $key=>$value) {
+            if($key>1) {
+                $argument .= $value." ";
+            }
+        }
+        $argument = trim($argument);
+        if(stripos($argument,"upgrade")!==false) {
+            $result = prompt("Are you sure you want to run '".$argument."' ? [Y/N]");
+            if(strtolower($result)=="y") {
+                print shell_exec('sh '.$root.'/mage '.$argument);
+                print "\nUpgraded!\n\n";
+            }
+        } else {
+            print shell_exec('sh '.$root.'/mage '.$argument);
+        }
+        break;
+    case 'minstall':
+        $version = $argv[2];
+        if(strlen($version)==4) {
+            $newVersion = null;
+            for($i=0;$i<strlen($version);$i++) {
+                $newVersion .= $version[$i];
+                if($i!=strlen($version)-1) {
+                    $newVersion .= ".";
+                }
+            }
+            $version = $newVersion;
+        }
+        shell_exec("wget http://www.magentocommerce.com/downloads/assets/".$version."/magento-".$version.".tar.gz");
+        shell_exec("tar -zxvf magento-".$version.".tar.gz");
+        shell_exec("mv magento/* magento/.htaccess .");
+        shell_exec("chmod -R o+w media var");
+        shell_exec("chmod o+w app/etc");
+        shell_exec("rm -rf magento/ magento-$1.tar.gz");
+        shell_exec("chmod 775 -R app/etc var media");
+        print "\nMagento ".$version." installed.\n\n";
+        break;
+    default;
+        print "\nMate (command line Magento toolkit) - by Elgentos <peterjaap@elgentos.nl>\n\n";
+        print "mate index/indexer <default indexer options>\n";
+        print "    --status <indexer>            Show Indexer(s) Status
+    --mode <indexer>              Show Indexer(s) Index Mode
+    --mode-realtime <indexer>     Set index mode type \"Update on Save\"
+    --mode-manual <indexer>       Set index mode type \"Manual Update\"
+    --reindex <indexer>           Reindex Data
+    info                          Show allowed indexers
+    reindexall                    Reindex Data by all indexers\n";
+        print "    Indexes:\n";
+        print "        catalog_product_attribute     Product Attributes
+        catalog_product_price         Product Prices
+        catalog_url                   Catalog URL Rewrites
+        catalog_product_flat          Product Flat Data
+        catalog_category_flat         Category Flat Data
+        catalog_category_product      Category Products
+        catalogsearch_fulltext        Catalog Search Index
+        cataloginventory_stock        Stock Status
+        tag_summary                   Tag Aggregation Data\n";
+        print "mate compiler <default compiler options>\n";
+        print "    state         Show Compilation State
+    compile       Run Compilation Process
+    clear         Disable Compiler include path and Remove compiled files
+    enable        Enable Compiler include path
+    disable       Disable Compiler include path
+    help          This help\n";
+    print "mate connect <default mage options>\n";
+    print "    channel-add          Add a Channel
+    channel-alias        Specify an alias to a channel name
+    channel-delete       Remove a Channel From the List
+    channel-info         Retrieve Information on a Channel
+    channel-login        Connects and authenticates to remote channel server
+    channel-logout       Logs out from the remote channel server
+    clear-cache          Clear Web Services Cache
+    config-get           Show One Setting
+    config-help          Show Information About Setting
+    config-set           Change Setting
+    config-show          Show All Settings
+    convert              Convert old magento PEAR package to new format
+    download             Download Package
+    info                 Display information about a package
+    install              Install Package
+    install-file         Install Package Archive File
+    list-available       List Available Packages
+    list-channels        List Available Channels
+    list-files           List Files In Installed Package
+    list-installed       List Installed Packages In The Default Channel
+    list-upgrades        List Available Upgrades
+    package              Build Package
+    package-dependencies Show package dependencies
+    package-prepare      Show installation information of package
+    sync                 Synchronize Manually Installed Packages
+    sync-pear            Synchronize already Installed Packages by pear
+    uninstall            Un-install Package
+    upgrade              Upgrade Package
+    upgrade-all          Upgrade All Packages\n";
+
+        print "mate modules - overview the module list\n";
+        print "mate enable Package_Module - enable a module\n";
+        print "mate disable Package_Module - disable a module\n";
+        print "mate toggle Package_Module - toggle the status of a module\n";
+        print "mate backup - make a database dump to database.sql\n";
+        print "mate cc/cache - clear cache\n";
+        print "mate cs/session(s) - clear sessions\n";
+        print "mate cron - run the cron\n";
+        print "mate connect {arguments} - use default 'mage' exec to interface Magento Connect\n";
+        print "mate install channelName packageName - install packages using default 'mage' exec\n";
+        print "mate minstall {version} - install Magento (use '1600' or '1.6.2.0' for {version})\n";
+        print "mate resetmods - reset all permissions of dirs to 775 and files to 664\n";
+        print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
+
+        print "\nCurrent root dir is ".$root."\n";
+        print "\n";
+}
+
+function isModuleEnabled($filename) {
+    return !stripos(file_get_contents($filename),">false<");
+}
+
+function moduleOverview($root) {
+    foreach(explode("\n",shell_exec('ls '.$root."/app/etc/modules")) as $xml) {
+        if(!empty($xml)) {
+            echo str_pad(str_replace(".xml","",$xml),50," ",STR_PAD_RIGHT);
+            if(isModuleEnabled($root."/app/etc/modules/".$xml)) { echo "enabled"; } else { echo "disabled"; }
+        }
+        echo "\n";
+    }
+}
+
+function connectDb($root) {
+    $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
+    $info = (array)$local->global->resources->default_setup->connection;
+    $m = mysql_connect((string)$info['host'],(string)$info['username'],(string)$info['password']);
+    mysql_select_db((string)$info['dbname']);
+}
+
+function clearCache($root) {
+    shell_exec("rm -rf ".$root."/var/cache/*");
+}
+
+function prompt($prompt,$silent=false) {
+    echo $prompt." ";
+    if($silent) {
+        system('stty -echo');
+    } else {
+        system('stty echo');
+    }
+    $return = trim(fgets(STDIN));
+    system('stty echo');
+    // add a new line since the users CR didn't echo
+    echo "\n";
+    return $return;
+}
