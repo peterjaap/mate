@@ -11,6 +11,9 @@ USAGE
 Go to the root of a Magento installation and run 'mate'. It'll give a warning if you are in the wrong dir. Otherwise, it'll output a list of commands you can use.
 Certain commands of mate (such as 'compiler' and 'indexer') are just piped to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
+CHANGELOG
+29-03-2012: Added 'mate skeleton' to quickly create a skeleton module for development
+
 CONTACT
 GitHub: https://github.com/peterjaap/mate
 Twitter: https://twitter.com/PeterJaap
