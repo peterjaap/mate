@@ -130,6 +130,9 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         shell_exec("find ".$root." -type f -exec chmod 664 {} \;");
         echo "\nPermissions are reset.\n\n";
         break;
+    case 'reindexall':
+        print shell_exec('php '.$root.'/shell/indexer.php reindexall');
+        break;
     case 'backup':
         $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
         $info = (array)$local->global->resources->default_setup->connection;
