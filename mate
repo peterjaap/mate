@@ -131,6 +131,19 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         shell_exec("find ".$root." -type f -exec chmod 664 {} \;");
         echo "\nPermissions are reset.\n\n";
         break;
+    case 'log':
+        if(isset($argv[2])) {
+            $filename = $argv[2];
+        } else {
+            $filename = 'system.log';
+        }
+        if(isset($argv[3])) {
+            $lines = $argv[3];
+        } else {
+            $lines = 50;
+        }
+        echo shell_exec("tail -n ".$lines." ".$root."/var/log/".$filename);
+        break;
     case 'backup':
         $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
         $info = (array)$local->global->resources->default_setup->connection;

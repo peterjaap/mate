@@ -12,6 +12,7 @@ Go to the root of a Magento installation and run 'mate'. It'll give a warning if
 Certain commands of mate (such as 'compiler' and 'indexer') are just piped to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
 CHANGELOG
+11-04-2012: Added 'mate log' to view the last 50 lines of system.log
 10-04-2012: Added 'mate import' to import a backupped database, tweaked 'skeleton' a bit
 30-03-2012: Added 'mate reindexall' as a shortcut for 'mate indexer reindexall' for lazy colleague @jhhazelaar
 29-03-2012: Added 'mate skeleton' to quickly create a skeleton module for development
