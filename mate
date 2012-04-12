@@ -198,6 +198,9 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             echo "Template hints are now disabled.\n\n";
         }
         break;
+    case 'events':
+        echo shell_exec("grep -r 'Mage::dispatchEvent(' . | sed -e 's/.*Mage::dispatchEvent(//; s/,.*//; s/).*//;' | sed -e \"s/'//g;\" | grep -v '[^a-z_]' | grep -vE '^$' | sort | uniq -c");
+        break;
     case 'cc': // fallthrough
     case 'cache':
         clearCache($root);
@@ -331,6 +334,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate skeleton Package Module Version - create a skeleton module for development\n";
         print "mate backup - make a database dump to database.sql\n";
         print "mate import - import a backupped database\n";
+        print "mate events - list all events (for observers) found in the codebase/\n"
         print "mate cc/cache - clear cache\n";
         print "mate cs/session(s) - clear sessions\n";
         print "mate cron - run the cron\n";

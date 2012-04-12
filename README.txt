@@ -12,6 +12,7 @@ Go to the root of a Magento installation and run 'mate'. It'll give a warning if
 Certain commands of mate (such as 'compiler' and 'indexer') are just piped to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
 CHANGELOG
+12-04-2012: Added 'mate events' to get a list of all the events that are found in the codebase  (credits go to Byte - http://www.byte.nl/blog/2012/02/03/how-to-list-all-events-in-magento)
 11-04-2012: Added 'mate log' to view the last 50 lines of system.log
 10-04-2012: Added 'mate import' to import a backupped database, tweaked 'skeleton' a bit
 30-03-2012: Added 'mate reindexall' as a shortcut for 'mate indexer reindexall' for lazy colleague @jhhazelaar
