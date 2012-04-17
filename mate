@@ -1,14 +1,14 @@
 #!/usr/bin/php
 <?php
 // Define present working dir & thus root
-$pwd = trim(`pwd`);
+$pwd = $_SERVER['PWD'];
 $root = false;
 if(stripos($pwd,'/app')!==false) {
     $pathParts = explode('/',$pwd);
     $root = "/";
     foreach($pathParts as $part) { if($part=="app") { break; } $root .= "/".$part; }
 } else {
-    foreach(explode("\n",`ls`) as $listing) {
+    foreach(explode("\n",`ls $pwd`) as $listing) {
         if($listing=="app") { $root = $pwd; }
     }
 }
@@ -334,7 +334,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate skeleton Package Module Version - create a skeleton module for development\n";
         print "mate backup - make a database dump to database.sql\n";
         print "mate import - import a backupped database\n";
-        print "mate events - list all events (for observers) found in the codebase/\n"
+        print "mate events - list all events (for observers) found in the codebase/\n";
         print "mate cc/cache - clear cache\n";
         print "mate cs/session(s) - clear sessions\n";
         print "mate cron - run the cron\n";
