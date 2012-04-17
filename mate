@@ -265,7 +265,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         shell_exec("mv magento/* magento/.htaccess .");
         shell_exec("chmod -R o+w media var");
         shell_exec("chmod o+w app/etc");
-        shell_exec("rm -rf magento/ magento-$1.tar.gz");
+        shell_exec("rm -rf magento/ magento-".newVersion.".tar.gz");
         shell_exec("chmod 775 -R app/etc var media");
         print "\nMagento ".$version." installed.\n\n";
         break;
