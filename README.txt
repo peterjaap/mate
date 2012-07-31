@@ -16,6 +16,7 @@ commands you can use. Certain commands of mate (such as 'compiler' and 'indexer'
 to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
 CHANGELOG
+31-07-2012: Added 'mate devurl' to change the base URL to {{base_url}} for dev purposes
 31-07-2012: Added 'mate user' to create admin users & refactored the root discovery part to be
     able to use mate from anywhere within a Magento root dir
 23-04-2012: Added admin menu page to extension created by 'mate skeleton'
