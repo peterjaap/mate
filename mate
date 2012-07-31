@@ -1,21 +1,30 @@
 #!/usr/bin/php
 <?php
+$DS = "/";
 // Define present working dir & thus root
 $pwd = $_SERVER['PWD'];
 $root = false;
-if(stripos($pwd,'/app')!==false) {
-    $pathParts = explode('/',$pwd);
-    $root = "/";
-    foreach($pathParts as $part) { if($part=="app") { break; } $root .= "/".$part; }
+$pathParts = explode($DS,$pwd);
+
+if(stripos($pwd,$DS.'app')!==false) {
+    $root = $DS;
+    foreach($pathParts as $part) { if($part=="app") { break; } $root .= $DS.$part; }
 } else {
-    foreach(explode("\n",`ls $pwd`) as $listing) {
-        if($listing=="app") { $root = $pwd; }
+    for($i=0;$i<count($pathParts);$i++) {
+        $path = implode($pathParts,$DS);
+        foreach(explode("\n",`ls $path`) as $listing) {
+            if($listing=="app") { $root = $path; }
+        }
+        array_pop($pathParts);
     }
 }
 if(!$root AND $argv[1]!="minstall") {
     print "\nMagento installation not recognized; are you in the correct directory?\n\n";
     exit;
 }
+
+require_once $root . $DS . 'app' . $DS . 'Mage.php';
+Mage::app();
 
 if(!isset($argv[1])) { $argv[1] = null; }
 
@@ -38,7 +47,7 @@ switch($argv[1]) {
                 if(empty($argv[3])) { echo "Missing arguments"; exit; }
                 $filename = $argv[2]."_".$argv[3].".xml";
             }
-            $moduleXml = $root."/app/etc/modules/".$filename;
+            $moduleXml = $root. DS . "app" . DS . "etc" . DS . "modules" . DS . $filename;
             if(isModuleEnabled($moduleXml)) {
                 echo "\nModule ".str_replace(".xml","",$filename)." is already enabled\n\n";
             } else {
@@ -46,13 +55,11 @@ switch($argv[1]) {
                 echo "\nModule ".str_replace(".xml","",$filename)." is now enabled\n\n";
             }
         break;
-
     case 'skeleton':
         if(count($argv)<4) {
             echo "Use 'mate skeleton Package Module Version'\n\n";
             exit;
         }
-
         $package = $argv[2];
         $module = $argv[3];
         $modulelow = strtolower($module);
@@ -62,13 +69,13 @@ switch($argv[1]) {
             $version = $argv[4];
         }
         echo "Creating module skeleton for ".$package."_".$module.", version ".$version."\n";
-       shell_exec('mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/etc
+       shell_exec('mkdir -p '.$root. DS . 'app' . DS . 'code' . DS . 'local' . DS . $package. DS . $module . DS . 'etc
 echo "<?xml version=\"1.0\"?>\n<config>\n\t<modules>\n\t\t<'.$package.'_'.$module.'>\n\t\t\t<version>'.$version.'</version>\n\t\t</'.$package.'_'.$module.'>\n\t</modules>\n\t<adminhtml>\n\t\t<translate>\n\t\t\t<modules>\n\t\t\t\t<'.$package.'_'.$module.'>\n\t\t\t\t\t<files>\n\t\t\t\t\t\t<default>'.$package.'_'.$module.'.csv</default>\n\t\t\t\t\t</files>\n\t\t\t\t</'.$package.'_'.$module.'>\n\t\t\t</modules>\n\t\t</translate>\n\t\t<layout>\n\t\t\t<updates>\n\t\t\t\t<'.$modulelow.'>\n\t\t\t\t\t<file>'.$modulelow.'.xml</file>\n\t\t\t\t</'.$modulelow.'>\n\t\t\t</updates>\n\t\t</layout>\n\t\t\n\t\t<acl>\n\t\t\t<resources>\n\t\t\t\t<admin>\n\t\t\t\t\t<children>\n\t\t\t\t\t\t<system>\n\t\t\t\t\t\t\t<children>\n\t\t\t\t\t\t\t\t<config>\n\t\t\t\t\t\t\t\t\t<children>\n\t\t\t\t\t\t\t\t\t\t<'.$modulelow.' translate=\"title\" module=\"'.$modulelow.'\">\n\t\t\t\t\t\t\t\t\t\t\t<title>'.$module.'</title>\n\t\t\t\t\t\t\t\t\t\t</'.$modulelow.'>\n\t\t\t\t\t\t\t\t\t</children>\n\t\t\t\t\t\t\t\t</config>\n\t\t\t\t\t\t\t</children>\n\t\t\t\t\t\t</system>\n\t\t\t\t\t</children>\n\t\t\t\t</admin>\n\t\t\t</resources>\n\t\t</acl>\n\t</adminhtml>\n\t<global>\n\t\t<models>\n\t\t\t<'.$modulelow.'>\n\t\t\t\t<class>'.$package.'_'.$module.'_Model</class>\n\t\t\t</'.$modulelow.'>\n\t\t</models>\n\t\t<resources>\n\t\t\t<'.$modulelow.'_setup>\n\t\t\t\t<setup>\n\t\t\t\t\t<module>'.$package.'_'.$module.'</module>\n\t\t\t\t\t<class>'.$package.'_'.$module.'_Model_Mysql4_Setup</class>\n\t\t\t\t</setup>\n\t\t\t</'.$modulelow.'_setup>\n\t\t</resources>\n\n\t\t<helpers>\n\t\t\t<'.$modulelow.'>\n\t\t\t\t<class>'.$package.'_'.$module.'_Helper</class>\n\t\t\t</'.$modulelow.'>\n\t\t</helpers>\n\t</global>\n</config>" > '.$root.'/app/code/local/'.$package.'/'.$module.'/etc/config.xml
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\t<config>\n\t\t<modules>\n\t\t\t<'.$package.'_'.$module.'>\n\t\t\t\t<active>false</active>\n\t\t\t\t<codePool>local</codePool>\n\t\t\t</'.$package.'_'.$module.'>\n\t\t</modules>\n\t</config>" > '.$root.'/app/etc/modules/'.$package.'_'.$module.'.xml
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<config>\n\t<acl>\n\t\t<resources>\n\t\t\t<admin>\n\t\t\t\t<children>\n\t\t\t\t\t<system>\n\t\t\t\t\t\t<children>\n\t\t\t\t\t\t\t<config>\n\t\t\t\t\t\t\t\t<children>\n\t\t\t\t\t\t\t\t\t<'.$modulelow.' translate=\"title\" module=\"'.$modulelow.'\">\n\t\t\t\t\t\t\t\t\t\t<title>'.$module.'</title>\n\t\t\t\t\t\t\t\t\t</'.$modulelow.'>\n\t\t\t\t\t\t\t\t</children>\n\t\t\t\t\t\t\t</config>\n\t\t\t\t\t\t</children>\n\t\t\t\t\t</system>\n\t\t\t\t</children>\n\t\t\t</admin>\n\t\t</resources>\n\t</acl>\n</config>" > '.$root.'/app/code/local/'.$package.'/'.$module.'/etc/adminhtml.xml
 echo "<?xml version=\"1.0\"?>\n<config>\n\t\n\t<tabs>\n\t\t\t<'.strtolower($package).'>\n\t\t\t\t<label>'.$package.'</label>\n\t\t\t\t<sort_order>195</sort_order>\n\t\t\t</'.strtolower($package).'>\n\t\t</tabs>\n\t<sections>\n\t\n\t\t<'.$modulelow.' translate=\"label\" module=\"'.$modulelow.'\">\n\t\t\t<label>'.$module.'</label>\n\t\t\t<tab>'.strtolower($package).'</tab>\n\t\t\t<frontend_type>text</frontend_type>\n\t\t\t<sort_order>71</sort_order>\n\t\t\t<show_in_default>1</show_in_default>\n\t\t\t<show_in_website>1</show_in_website>\n\t\t\t<show_in_store>1</show_in_store>\n\t\t\t<groups>\n\t\t\t\t<general translate="label">\n\t\t\t\t\t<label>General</label>\n\t\t\t\t\t<expanded>1</expanded>\n\t\t\t\t\t<sort_order>600</sort_order>\n\t\t\t\t\t<show_in_default>1</show_in_default>\n\t\t\t\t\t<show_in_website>1</show_in_website>\n\t\t\t\t\t<show_in_store>1</show_in_store>\n\t\t\t\t\t<fields>\n\t\t\t\t\t\t<disabled translate="label">\n\t\t\t\t\t\t<label>Disable module</label>\n\t\t\t\t\t\t<frontend_type>select</frontend_type>\n\t\t\t\t\t\t<source_model>adminhtml/system_config_source_yesno</source_model>\n\t\t\t\t\t\t<sort_order>10</sort_order>\n\t\t\t\t\t\t<show_in_default>1</show_in_default>\n\t\t\t\t\t\t<show_in_website>1</show_in_website>\n\t\t\t\t\t\t<show_in_store>1</show_in_store>\n\t\t\t\t\t</disabled>\n\t\t\t\t</fields>\n\t\t\t</general>\n\t\t</groups>\n\t\t</'.$modulelow.'>\n\t</sections>\n</config>" > '.$root.'/app/code/local/'.$package.'/'.$module.'/etc/system.xml
 
-mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/Helper
+mkdir -p '.$root . DS . 'app' . DS . 'code' . DS . 'local' . DS .$package. DS . $module . DS . 'Helper
 echo "<?php\n\nclass '.$package.'_'.$module.'_Helper_Data extends Mage_Core_Helper_Abstract {\n\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/Helper/Data.php
 
 mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/Model/Mysql4
@@ -77,7 +84,6 @@ mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/controllers
 echo "<?php\n\nclass '.$package.'_'.$module.'_IndexController extends Mage_Core_Controller_Front_Action\n{\n\tpublic function indexAction() {\n\n\t}\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/controllers/IndexController.php
 mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/sql/"'.$modulelow.'"_setup
 echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_Eav_Mysql4_Setup(\'core_setup\');\n\$installer->startSetup();\n\n\$installer->endSetup();" > '.$root.'/app/code/local/'.$package.'/'.$module.'/sql/"'.$modulelow.'"_setup/mysql4-install-'.$version.'.php');
-
         break;
     case 'disable':
             if(empty($argv[2])) {
@@ -215,6 +221,27 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
     case 'index': // fallthrough
     case 'indexer':
         ($argument = isset($argv[2]) ? $argv[2] : null);
+        if($argument=='options') {
+            print "Magento Indexer options\n";
+            print "    --status <indexer>            Show Indexer(s) Status\n";
+            print "    --mode <indexer>              Show Indexer(s) Index Mode\n";
+            print "    --mode-realtime <indexer>     Set index mode type \"Update on Save\"\n";
+            print "    --mode-manual <indexer>       Set index mode type \"Manual Update\"\n";
+            print "    --reindex <indexer>           Reindex Data\n";
+            print "    info                          Show allowed indexers\n";
+            print "    reindexall                    Reindex Data by all indexers\n";
+            print "    Indexes:\n";
+            print "        catalog_product_attribute     Product Attributes\n";
+            print "        catalog_product_price         Product Prices\n";
+            print "        catalog_url                   Catalog URL Rewrites\n";
+            print "        catalog_product_flat          Product Flat Data\n";
+            print "        catalog_category_flat         Category Flat Data\n";
+            print "        catalog_category_product      Category Products\n";
+            print "        catalogsearch_fulltext        Catalog Search Index\n";
+            print "        cataloginventory_stock        Stock Status\n";
+            print "        tag_summary                   Tag Aggregation Data\n";
+            exit;
+        }
         print shell_exec('php '.$root.'/shell/indexer.php '.$argument);
         break;
     case 'compiler':
@@ -269,65 +296,38 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         shell_exec("chmod 775 -R app/etc var media");
         print "\nMagento ".$version." installed.\n\n";
         break;
+    case 'user':
+        $username = prompt("What is the desired username?");
+        $password = prompt("What is the desired password?");
+        $email = prompt("What is users' email address?");
+        $firstname = prompt("What is users' first name?");
+        $lastname = prompt("What is users' last name?");
+        try {
+            //create new user
+            $user = Mage::getModel('admin/user')
+                ->setData(array(
+                    'username'  => $username,
+                    'firstname' => $firstname,
+                    'lastname'    => $lastname,
+                    'email'     => $email,
+                    'password'  => $password,
+                    'is_active' => 1
+                ))->save();
+            $user->setRoleIds(array(1))
+                ->setRoleUserId($user->getUserId())
+                ->saveRelations();
+            echo "User '".$username."' has been succesfully created.\n\n";
+        } catch (Exception $e) {
+            echo $e->getMessage();
+            exit;
+        }
+        break;
     default;
         print "\nMate (command line Magento toolkit) - by Elgentos <peterjaap@elgentos.nl>\n\n";
-        print "mate index/indexer <default indexer options>\n";
-        print "    --status <indexer>            Show Indexer(s) Status
-    --mode <indexer>              Show Indexer(s) Index Mode
-    --mode-realtime <indexer>     Set index mode type \"Update on Save\"
-    --mode-manual <indexer>       Set index mode type \"Manual Update\"
-    --reindex <indexer>           Reindex Data
-    info                          Show allowed indexers
-    reindexall                    Reindex Data by all indexers\n";
-        print "    Indexes:\n";
-        print "        catalog_product_attribute     Product Attributes
-        catalog_product_price         Product Prices
-        catalog_url                   Catalog URL Rewrites
-        catalog_product_flat          Product Flat Data
-        catalog_category_flat         Category Flat Data
-        catalog_category_product      Category Products
-        catalogsearch_fulltext        Catalog Search Index
-        cataloginventory_stock        Stock Status
-        tag_summary                   Tag Aggregation Data\n";
-        print "mate compiler <default compiler options>\n";
-        print "    state         Show Compilation State
-    compile       Run Compilation Process
-    clear         Disable Compiler include path and Remove compiled files
-    enable        Enable Compiler include path
-    disable       Disable Compiler include path
-    help          This help\n";
-    print "mate connect <default mage options>\n";
-    print "    channel-add          Add a Channel
-    channel-alias        Specify an alias to a channel name
-    channel-delete       Remove a Channel From the List
-    channel-info         Retrieve Information on a Channel
-    channel-login        Connects and authenticates to remote channel server
-    channel-logout       Logs out from the remote channel server
-    clear-cache          Clear Web Services Cache
-    config-get           Show One Setting
-    config-help          Show Information About Setting
-    config-set           Change Setting
-    config-show          Show All Settings
-    convert              Convert old magento PEAR package to new format
-    download             Download Package
-    info                 Display information about a package
-    install              Install Package
-    install-file         Install Package Archive File
-    list-available       List Available Packages
-    list-channels        List Available Channels
-    list-files           List Files In Installed Package
-    list-installed       List Installed Packages In The Default Channel
-    list-upgrades        List Available Upgrades
-    package              Build Package
-    package-dependencies Show package dependencies
-    package-prepare      Show installation information of package
-    sync                 Synchronize Manually Installed Packages
-    sync-pear            Synchronize already Installed Packages by pear
-    uninstall            Un-install Package
-    upgrade              Upgrade Package
-    upgrade-all          Upgrade All Packages\n";
-
-        print "mate modules - overview the module list\n";
+        print "mate index/indexer <default indexer options> (run 'mate indexer options' to see all options)\n";
+        print "mate compiler <default compiler options> (run 'mate compiler' to see all options')\n";
+        print "mate connect <default mage options> (run 'mate connect' to see all options)\n";
+        print "mate modules / mate mod - overview the module list\n";
         print "mate enable Package_Module - enable a module\n";
         print "mate disable Package_Module - disable a module\n";
         print "mate toggle Package_Module - toggle the status of a module\n";
@@ -340,12 +340,14 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate cron - run the cron\n";
         print "mate connect {arguments} - use default 'mage' exec to interface Magento Connect\n";
         print "mate install channelName packageName - install packages using default 'mage' exec\n";
+        print "mate user - create an admin account, will prompt for username, pass, email and name\n";
         print "mate minstall {version} - install Magento (use '1600' or '1.6.2.0' for {version})\n";
         print "mate resetmods - reset all permissions of dirs to 775 and files to 664\n";
         print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
 
         print "\nCurrent root dir is ".$root."\n";
         print "\n";
+    break;
 }
 
 function isModuleEnabled($filename) {
