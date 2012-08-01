@@ -24,7 +24,6 @@ if(!$root AND $argv[1]!="minstall") {
 }
 
 require_once $root . $DS . 'app' . $DS . 'Mage.php';
-Mage::app();
 
 if(!isset($argv[1])) { $argv[1] = null; }
 
@@ -297,12 +296,14 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "\nMagento ".$version." installed.\n\n";
         break;
     case 'devurl':
+        Mage::app();
         $resource = Mage::getResourceModel('core/config');
         $resource->saveConfig('web/unsecure/base_url', '{{base_url}}', 'default', 0);
         $resource->saveConfig('web/secure/base_url', '{{base_url}}', 'default', 0);
         echo "Secure & unsecure base URLs have been set to {{base_url}} (not recommended in production!)\n";
     break;
     case 'user':
+        Mage::app();
         $username = prompt("What is the desired username?");
         $password = prompt("What is the desired password?");
         $email = prompt("What is users' email address?");
