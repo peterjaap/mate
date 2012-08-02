@@ -347,7 +347,13 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             $active = $data->modules->{$moduleName}->active[0];
             if($active!='true' AND $active!='1') continue; // skip disabled modules
 
-            $config = new SimpleXMLElement(file_get_contents($root . '/app/code/' . $codePool . '/' . $vendor . '/' . $package . '/etc/config.xml'));
+            $configFilePath = $root . '/app/code/' . $codePool . '/' . $vendor . '/' . $package . '/etc/config.xml';
+            if(!file_exists($configFilePath)) {
+                echo "Cannot open {$configFilePath}; it does not exist while we expected it to be there!\n";
+                continue;
+            }
+            $configFile = file_get_contents($configFilePath);
+            $config = new SimpleXMLElement($configFile);
             $areas = array('global','frontend','adminhtml');
             $elements = array('blocks','models');
 
@@ -377,7 +383,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                 $conflicts++;
             }
         }
-        if(!$conflicts) echo 'No conflicts were found. Beware; this does not mean there aren\'t any conflicts, just that they haven\'t been found! Use the force, read the source.\n';
+        if(!$conflicts) echo 'No conflicts were found. Beware; this does not mean there aren\'t any conflicts, just that they haven\'t been found! Use the force, read the source.' . "\n";
     break;
     default;
         print "\nMate (command line Magento toolkit) - by Elgentos <peterjaap@elgentos.nl>\n\n";
