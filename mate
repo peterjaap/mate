@@ -329,6 +329,48 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             exit;
         }
         break;
+    case 'conflicts':
+        $modules = array_slice(scandir($root . '/app/etc/modules'),2);
+        $potentialConflicts = array();
+        foreach($modules as $module) {
+            if(substr($module,0,4)=='Mage') continue; // skip core modules
+            $data = new SimpleXMLElement(file_get_contents('app/etc/modules/' . $module));
+            list($vendor,$package) = explode('_',array_pop(array_keys(get_object_vars($data->modules))));
+            $moduleName = $vendor . '_' . $package;
+            $codePool = $data->modules->{$moduleName}->codePool[0];
+            $active = $data->modules->{$moduleName}->active[0];
+            if($active!='true' AND $active!='1') continue; // skip disabled modules
+
+            $config = new SimpleXMLElement(file_get_contents($root . '/app/code/' . $codePool . '/' . $vendor . '/' . $package . '/etc/config.xml'));
+            $areas = array('global','frontend','adminhtml');
+            $elements = array('blocks','models');
+
+            foreach($areas as $area) {
+                foreach($elements as $element) {
+                    if(!count($config->{$area}->{$element})) continue;
+                    foreach($config->{$area}->{$element}->children() as $module) {
+                        foreach($config->{$area}->{$element}->{$module->getName()}->children() as $mod) {
+                            if($mod->getName()=='rewrite') {
+                                foreach($config->{$area}->{$element}->{$module->getName()}->{$mod->getName()}->children() as $mod) {
+                                    echo "Rewrite found in " . $moduleName . " / " . $area . " / " . $element . " / " . $module->getName() . " for " . $mod->getName() . " to; " . $mod . "\n";
+                                    $potentialConflicts[$area . '/' . $element . '/' . $module->getName() . '/' . $mod->getName()][] = (string)$mod;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        echo "\n";
+        $conflicts = 0;
+        foreach($potentialConflicts as $rewritePath=>$potentialConflict) {
+            if(count($potentialConflict)>1) {
+                echo "Conflict found for " . $rewritePath . "; ".implode(", ",$potentialConflict)."\n";
+                $conflicts++;
+            }
+        }
+        if(!$conflicts) echo "No conflicts were found. Beware; this does not mean there aren't any conflicts, just that they haven't been found! Use the force, read the source.\n";
+    break;
     default;
         print "\nMate (command line Magento toolkit) - by Elgentos <peterjaap@elgentos.nl>\n\n";
         print "mate index/indexer <default indexer options> (run 'mate indexer options' to see all options)\n";
@@ -352,6 +394,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate resetmods - reset all permissions of dirs to 775 and files to 664\n";
         print "mate devurl - set the secure & unsecure base url to {{base_url}} for during development\n";
         print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
+        print "mate conflicts - looks through all third party modules and checks for possible conflicts\n";
 
         print "\nCurrent root dir is ".$root."\n";
         print "\n";
