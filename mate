@@ -306,7 +306,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         $status = $argv[2];
         Mage::app();
         $resource = Mage::getResourceModel('core/config');
-        if($status=='enable' || $status=='on') {
+        if($status=='enable' || $status=='on' || $status=='1' || $status=='true') {
             $status = 1;
         } else {
             $status = 0;
