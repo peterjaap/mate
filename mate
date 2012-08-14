@@ -311,7 +311,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         } else {
             $status = 0;
         }
-        $resource->saveConfig('dev/log/active', $status);
+        $resource->saveConfig('dev/log/active', $status, 'default');
         if($status) {
             echo "Logging is now enabled.\n";
         } else {
