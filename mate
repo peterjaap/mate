@@ -302,6 +302,22 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         $resource->saveConfig('web/secure/base_url', '{{base_url}}', 'default', 0);
         echo "Secure & unsecure base URLs have been set to {{base_url}} (not recommended in production!)\n";
     break;
+    case 'logs':
+        $status = $argv[2];
+        Mage::app();
+        $resource = Mage::getResourceModel('core/config');
+        if($status=='enable' || $status=='on') {
+            $status = 1;
+        } else {
+            $status = 0;
+        }
+        $resource->saveConfig('dev/log/active', $status);
+        if($status) {
+            echo "Logging is now enabled.\n";
+        } else {
+            echo "Logging is now disabled.\n";
+        }
+    break;
     case 'user':
         Mage::app();
         $username = prompt("What is the desired username?");
@@ -409,6 +425,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate devurl - set the secure & unsecure base url to {{base_url}} for during development\n";
         print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
         print "mate conflicts - looks through all third party modules and checks for possible conflicts\n";
+        print "mate logs [enable/disable] / [on/off] - enable/disable logging to var/log/system.log\n";
 
         print "\nCurrent root dir is ".$root."\n";
         print "\n";

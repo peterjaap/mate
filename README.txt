@@ -16,6 +16,7 @@ commands you can use. Certain commands of mate (such as 'compiler' and 'indexer'
 to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
 CHANGELOG
+14-08-2012: Added 'mate logs [enable/disable] / [on/off]' to enable/disable logging to var/log/system.log
 01-08-2012: Added 'mate conflicts' to look for conflicts between third party modules
 31-07-2012: Added 'mate devurl' to change the base URL to {{base_url}} for dev purposes
 31-07-2012: Added 'mate user' to create admin users & refactored the root discovery part to be
