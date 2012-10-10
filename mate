@@ -23,7 +23,9 @@ if(!$root AND $argv[1]!="minstall") {
     exit;
 }
 
-require_once $root . $DS . 'app' . $DS . 'Mage.php';
+if($root AND $argv[1]!="minstall") {
+        require_once $root . $DS . 'app' . $DS . 'Mage.php';
+}
 
 if(!isset($argv[1])) { $argv[1] = null; }
 
@@ -439,8 +441,29 @@ function isModuleEnabled($filename) {
 function moduleOverview($root) {
     foreach(explode("\n",shell_exec('ls '.$root."/app/etc/modules")) as $xml) {
         if(!empty($xml)) {
-            echo str_pad(str_replace(".xml","",$xml),50," ",STR_PAD_RIGHT);
-            if(isModuleEnabled($root."/app/etc/modules/".$xml)) { echo "enabled"; } else { echo "disabled"; }
+            $name = str_replace(".xml","",$xml);
+            echo str_pad($name,50," ",STR_PAD_RIGHT);
+            $filename = $root."/app/etc/modules/".$xml;
+            if(isModuleEnabled($filename)) { $status = "enabled"; } else { $status = "disabled"; }
+            echo str_pad($status,15," ",STR_PAD_RIGHT);
+
+            if(!stripos(file_get_contents($filename),">local<")) {
+                $codepool = 'community';
+            } else {
+                $codepool = 'local';
+            }
+            echo str_pad($codepool,15," ",STR_PAD_RIGHT);
+            $configXml = $root . '/app/code/'.$codepool.'/'.str_replace("_","/",$name).'/etc/config.xml';
+            if(file_exists($configXml)) {
+                $configXml = simplexml_load_string(file_get_contents($configXml));
+                if(is_object($configXml) AND isset($configXml->modules) AND isset($configXml->modules->{$name})) {
+                    echo $configXml->modules->{$name}->version;
+                } else {
+                    echo "N/A";
+                }
+            } else {
+                echo "N/A";
+            }
         }
         echo "\n";
     }

@@ -16,6 +16,7 @@ commands you can use. Certain commands of mate (such as 'compiler' and 'indexer'
 to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
 CHANGELOG
+10-10-2012: Added codepool & version to 'mate mod' listing & fixed minor bugs when using mate in a non-Magento environment
 14-08-2012: Added 'mate logs [enable/disable] / [on/off]' to enable/disable logging to var/log/system.log
 01-08-2012: Added 'mate conflicts' to look for conflicts between third party modules
 31-07-2012: Added 'mate devurl' to change the base URL to {{base_url}} for dev purposes
