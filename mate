@@ -77,14 +77,14 @@ echo -e "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<config>\n\t<acl>\n\t\t<res
 echo -e "<?xml version=\"1.0\"?>\n<config>\n\t\n\t<tabs>\n\t\t\t<'.strtolower($package).'>\n\t\t\t\t<label>'.$package.'</label>\n\t\t\t\t<sort_order>195</sort_order>\n\t\t\t</'.strtolower($package).'>\n\t\t</tabs>\n\t<sections>\n\t\n\t\t<'.$modulelow.' translate=\"label\" module=\"'.$modulelow.'\">\n\t\t\t<label>'.$module.'</label>\n\t\t\t<tab>'.strtolower($package).'</tab>\n\t\t\t<frontend_type>text</frontend_type>\n\t\t\t<sort_order>71</sort_order>\n\t\t\t<show_in_default>1</show_in_default>\n\t\t\t<show_in_website>1</show_in_website>\n\t\t\t<show_in_store>1</show_in_store>\n\t\t\t<groups>\n\t\t\t\t<general translate=\"label\">\n\t\t\t\t\t<label>General</label>\n\t\t\t\t\t<expanded>1</expanded>\n\t\t\t\t\t<sort_order>600</sort_order>\n\t\t\t\t\t<show_in_default>1</show_in_default>\n\t\t\t\t\t<show_in_website>1</show_in_website>\n\t\t\t\t\t<show_in_store>1</show_in_store>\n\t\t\t\t\t<fields>\n\t\t\t\t\t\t<disabled translate=\"label\">\n\t\t\t\t\t\t<label>Disable module</label>\n\t\t\t\t\t\t<frontend_type>select</frontend_type>\n\t\t\t\t\t\t<source_model>adminhtml/system_config_source_yesno</source_model>\n\t\t\t\t\t\t<sort_order>10</sort_order>\n\t\t\t\t\t\t<show_in_default>1</show_in_default>\n\t\t\t\t\t\t<show_in_website>1</show_in_website>\n\t\t\t\t\t\t<show_in_store>1</show_in_store>\n\t\t\t\t\t</disabled>\n\t\t\t\t</fields>\n\t\t\t</general>\n\t\t</groups>\n\t\t</'.$modulelow.'>\n\t</sections>\n</config>" > '.$root.'/app/code/local/'.$package.'/'.$module.'/etc/system.xml
 
 mkdir -p '.$root . DS . 'app' . DS . 'code' . DS . 'local' . DS .$package. DS . $module . DS . 'Helper
-echo -e "<?php\n\nclass '.$package.'_'.$module.'_Helper_Data extends Mage_Core_Helper_Abstract {\n\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/Helper/Data.php
+echo "<?php\n\nclass '.$package.'_'.$module.'_Helper_Data extends Mage_Core_Helper_Abstract {\n\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/Helper/Data.php
 
 mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/Model/Mysql4
-echo -e "<?php\n\nclass '.$package.'_'.$module.'_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup\n{\n\n\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/Model/Mysql4/Setup.php
+echo "<?php\n\nclass '.$package.'_'.$module.'_Model_Mysql4_Setup extends Mage_Eav_Model_Entity_Setup\n{\n\n\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/Model/Mysql4/Setup.php
 mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/controllers
-echo -e "<?php\n\nclass '.$package.'_'.$module.'_IndexController extends Mage_Core_Controller_Front_Action\n{\n\tpublic function indexAction() {\n\n\t}\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/controllers/IndexController.php
+echo "<?php\n\nclass '.$package.'_'.$module.'_IndexController extends Mage_Core_Controller_Front_Action\n{\n\tpublic function indexAction() {\n\n\t}\n}" > '.$root.'/app/code/local/'.$package.'/'.$module.'/controllers/IndexController.php
 mkdir -p '.$root.'/app/code/local/'.$package.'/'.$module.'/sql/"'.$modulelow.'"_setup
-echo -e "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_Eav_Mysql4_Setup(\'core_setup\');\n\$installer->startSetup();\n\n\$installer->endSetup();" > '.$root.'/app/code/local/'.$package.'/'.$module.'/sql/"'.$modulelow.'"_setup/mysql4-install-'.$version.'.php');
+echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_Eav_Mysql4_Setup(\'core_setup\');\n\$installer->startSetup();\n\n\$installer->endSetup();" > '.$root.'/app/code/local/'.$package.'/'.$module.'/sql/"'.$modulelow.'"_setup/mysql4-install-'.$version.'.php');
         break;
     case 'disable':
             if(empty($argv[2])) {
