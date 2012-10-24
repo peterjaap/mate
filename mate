@@ -347,6 +347,22 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             exit;
         }
         break;
+    case 'passwd':
+        Mage::app();
+        $username = prompt("For which user do you want to change the password?");
+        $password = prompt("What is the desired password?");
+        try {
+            //create new user
+                Mage::getModel('admin/user')
+                     ->loadByUsername($username)
+                     ->setPassword($password)
+                     ->save();
+            echo $username."'s password has been succesfully changed.\n\n";
+        } catch (Exception $e) {
+            echo $e->getMessage();
+            exit;
+        }
+        break;
     case 'conflicts':
         $modules = array_slice(scandir($root . '/app/etc/modules'),2);
         $potentialConflicts = array();
