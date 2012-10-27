@@ -15,7 +15,38 @@ It'll give a warning if you are not in a Magento tree. Otherwise, it'll output a
 commands you can use. Certain commands of mate (such as 'compiler' and 'indexer') are just piped
 to the existing equivalent file (shell/compiler.php and shell/indexer.php).
 
+AVAILABLE COMMANDS
+mate index/indexer <default indexer options> (run 'mate indexer options' to see all options)
+mate reindexall - shortcut for mate index reindexall
+mate compiler <default compiler options> (run 'mate compiler' to see all options')
+mate connect <default mage options> (run 'mate connect' to see all options)
+mate modules / mate mod - overview the module list
+mate enable Package_Module - enable a module
+mate disable Package_Module - disable a module
+mate toggle Package_Module - toggle the status of a module
+mate skeleton Package Module Version - create a skeleton module for development
+mate backup - make a database dump to database.sql
+mate import - import a backupped database
+mate events - list all events (for observers) found in the codebase/
+mate cc/cache - clear cache
+mate cs/session(s) - clear sessions
+mate cron - run the cron
+mate connect {arguments} - use default 'mage' exec to interface Magento Connect
+mate install channelName packageName - install packages using default 'mage' exec
+mate user - create an admin account, will prompt for username, pass, email and name
+mate passwd - change password for a user, will prompt for username & pass
+mate minstall {version} - install Magento (use '1600' or '1.6.2.0' for {version})
+mate resetmods - reset all permissions of dirs to 775 and files to 664
+mate devurl - set the secure & unsecure base url to {{base_url}} for during development
+mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin
+mate conflicts - looks through all third party modules and checks for possible conflicts
+mate events - look for all events that are available within this installation
+mate logs [enable/disable] / [on/off] - enable/disable logging to var/log/system.log
+mate backup - create a backup of the current database (saves to database.sql)
+mate import {filename} - import a backup into the current database (caution; will drop all tables). When filename is omitted, 'database.sql' is assumed
+
 CHANGELOG
+23-10-2012: Added change password 'passwd' action
 10-10-2012: Added codepool & version to 'mate mod' listing & fixed minor bugs when using mate in a non-Magento environment
 14-08-2012: Added 'mate logs [enable/disable] / [on/off]' to enable/disable logging to var/log/system.log
 01-08-2012: Added 'mate conflicts' to look for conflicts between third party modules
