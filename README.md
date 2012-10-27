@@ -7,6 +7,8 @@
 2) Then make it executable ('chmod +x mate'). Open your ~/.bashrc and put in an alias like so; alias mate='/var/scripts/mate'  
 3) Reload your bash; 'source ~/.bashrc'.  
 
+Or just place it in your $PATH.
+
 ## Usage ##
 Go into the directory of a Magento installation (any level deep) and run 'mate'.  
 It'll give a warning if you are not in a Magento tree. Otherwise, it'll output a list of commands you can use. Certain commands of mate (such as 'compiler' and 'indexer') are just piped to the existing equivalent file (shell/compiler.php and shell/indexer.php).
