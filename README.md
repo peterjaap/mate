@@ -1,4 +1,4 @@
-# Mate #
+# Mate - CLI toolkit for Magento #
 ## About ##
 'mate' is a command line toolkit for Magento developers. It was written in a few hours to tackle the most repetitive tasks. 'mate' is written by Peter Jaap Blaakmeer.
 
@@ -60,7 +60,7 @@ GitHub: https://github.com/peterjaap/mate
 Twitter: https://twitter.com/PeterJaap  
 Email: peterjaap@elgentos.nl  
 
-## LICENSE ##
+## License ##
 Copyright (C) 2012 Elgentos
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
