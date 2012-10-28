@@ -33,7 +33,7 @@ mate connect {arguments} - use default 'mage' exec to interface Magento Connect
 mate install channelName packageName - install packages using default 'mage' exec  
 mate user - create an admin account, will prompt for username, pass, email and name  
 mate passwd - change password for a user, will prompt for username & pass  
-mate minstall {version} {sample} {db_name} - install Magento (use '1600' or '1.6.2.0' for {version}). Use 'sample' for {sample} to download sample data file. Give up db_name to automatically create database.  
+mate minstall {version} {db_name} {sample} {sampleversion}- install Magento (use '1600' or '1.6.2.0' for {version}).  Give up {db_name} to automatically create database. Use 'sample' for {sample} to download sample data file.  
 mate resetmods - reset all permissions of dirs to 775 and files to 664  
 mate devurl - set the secure & unsecure base url to {{base_url}} for during development  
 mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin  
