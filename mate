@@ -288,14 +288,40 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             }
             $version = $newVersion;
         }
+	$ls = glob("*");
+	if(count($ls)) {
+		echo "The current directory is not empty; are you sure you want to install Magento in this directory?\n";
+		exit;
+	}
         shell_exec("wget http://www.magentocommerce.com/downloads/assets/".$version."/magento-".$version.".tar.gz");
         shell_exec("tar -zxvf magento-".$version.".tar.gz");
         shell_exec("mv magento/* magento/.htaccess .");
         shell_exec("chmod -R o+w media var");
         shell_exec("chmod o+w app/etc");
-        shell_exec("rm -rf magento/ magento-".newVersion.".tar.gz");
+        shell_exec("rm -rf magento/ magento-" . $newVersion . ".tar.gz");
         shell_exec("chmod 775 -R app/etc var media");
-        print "\nMagento ".$version." installed.\n\n";
+        print "\nMagento ".$version." downloaded.\n\n";
+        if(isset($argv[5])) {
+                $sampleVersion = $argv[5];
+        } else {
+                $sampleVersion = '1.6.1.0';
+        }
+	if(isset($argv[4])) {
+		shell_exec('mysql -e "create database ' . $argv[4] . ';"');
+		echo "Database " . $argv[4] . " is created.\n\n";
+	}
+        if(isset($argv[3]) AND $argv[3]=='sample') {
+                shell_exec("wget http://www.magentocommerce.com/downloads/assets/" . $sampleVersion . "/magento-sample-data-" . $sampleVersion . ".tar.gz");
+                shell_exec("tar -zxvf magento-sample-data-" . $sampleVersion . ".tar.gz");
+		shell_exec("cp -R magento-sample-data-" . $sampleVersion . "/* . ; rm -rf magento-sample-data-" . $sampleVersion);
+		shell_exec("chmod -R 777 media/catalog");
+		if(!isset($argv[4])) {
+			echo "Import the magento-sample-data-" . $sampleVersion .".sql file into an empty database.\n";
+		} else {
+			shell_exec("mysql " . $argv[4] . " < magento_sample_data_for_" . $sampleVersion . ".sql");
+			echo "Magento sample data file imported into " . $argv[4] . "\n";
+		}
+        }
         break;
     case 'devurl':
         Mage::app();
@@ -440,7 +466,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate install channelName packageName - install packages using default 'mage' exec\n";
         print "mate user - create an admin account, will prompt for username, pass, email and name\n";
 	print "mate passwd - change password for a user, will prompt for username & pass\n";
-        print "mate minstall {version} - install Magento (use '1600' or '1.6.2.0' for {version})\n";
+	print "mate minstall {version} {sample} {db_name} - install Magento (use '1600' or '1.6.2.0' for {version}). Use 'sample' for {sample} to download sample data file. Give up db_name to automatically create database.\n";
         print "mate resetmods - reset all permissions of dirs to 775 and files to 664\n";
         print "mate devurl - set the secure & unsecure base url to {{base_url}} for during development\n";
         print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
