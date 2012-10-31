@@ -493,6 +493,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                 }
             }
             $maxLength = max($filenameLengths);
+            $notfounds = array();
             foreach($finds as $find) {
                 @list($filename,$foundtext) = explode(":",$find,2);
                 if($filename && $foundtext) {
@@ -511,6 +512,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                         $translation = $translations[$foundtext];
                         if($translation==$foundtext || !$translation) {
                             $translation = "NOT FOUND";
+                            $notfounds[] = $foundtext;
                         }
                         echo str_pad(" ",$maxLength+10,' ',STR_PAD_RIGHT)."Translation ".$language.": " . $translation;
                         echo "\n";
@@ -518,6 +520,11 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                         echo "\n";
                     }
                 }
+            }
+            echo "\nCopy/paste this into ".implode(" or ",$translateFiles)." and add the translations;\n\n";
+            foreach($notfounds as $nf) {
+                echo '"'.$nf.'",""';
+                echo "\n";
             }
         }
 
