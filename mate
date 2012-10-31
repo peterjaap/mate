@@ -19,8 +19,8 @@ if(stripos($pwd,$DS.'app')!==false) {
     }
 }
 if(!$root AND ((!isset($argv[1]) || (isset($argv[1]) AND $argv[1]!="minstall")))) {
-	print "\nMagento installation not recognized; are you in the correct directory?\n\n";
-	exit;
+    print "\nMagento installation not recognized; are you in the correct directory?\n\n";
+    exit;
 }
 
 if($root AND ((!isset($argv[1]) || (isset($argv[1]) AND $argv[1]!="minstall")))) {
@@ -34,12 +34,12 @@ switch($argv[1]) {
     case 'mod':
     case 'module':
         echo "\nFound modules;\n\n";
-        moduleOverview($root);
+        echo moduleOverview($root);
         break;
     case 'enable':
             if(empty($argv[2])) {
                 echo "\nPlease pass along modules name. Here is the list;\n\n";
-                moduleOverview($root);
+                echo moduleOverview($root);
                 exit;
             }
             if(stripos($argv[2],"_")!==false) {
@@ -89,7 +89,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
     case 'disable':
             if(empty($argv[2])) {
                 echo "\nPlease pass along modules name. Here is the list;\n\n";
-                moduleOverview($root);
+                echo moduleOverview($root);
                 exit;
             }
             if(stripos($argv[2],"_")!==false) {
@@ -288,11 +288,11 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             }
             $version = $newVersion;
         }
-	$ls = glob("*");
-	if(count($ls)) {
-		echo "The current directory is not empty; are you sure you want to install Magento in this directory?\n";
-		exit;
-	}
+    $ls = glob("*");
+    if(count($ls)) {
+        echo "The current directory is not empty; are you sure you want to install Magento in this directory?\n";
+        exit;
+    }
         shell_exec("wget http://www.magentocommerce.com/downloads/assets/".$version."/magento-".$version.".tar.gz");
         shell_exec("tar -zxvf magento-".$version.".tar.gz");
         shell_exec("mv magento/* magento/.htaccess .");
@@ -306,21 +306,21 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         } else {
                 $sampleVersion = '1.6.1.0';
         }
-	if(isset($argv[3])) {
-		shell_exec('mysql -e "create database ' . $argv[3] . ';"');
-		echo "Database " . $argv[3] . " is created.\n\n";
-	}
+    if(isset($argv[3])) {
+        shell_exec('mysql -e "create database ' . $argv[3] . ';"');
+        echo "Database " . $argv[3] . " is created.\n\n";
+    }
         if(isset($argv[4]) AND $argv[4]=='sample') {
                 shell_exec("wget http://www.magentocommerce.com/downloads/assets/" . $sampleVersion . "/magento-sample-data-" . $sampleVersion . ".tar.gz");
                 shell_exec("tar -zxvf magento-sample-data-" . $sampleVersion . ".tar.gz");
-		shell_exec("cp -R magento-sample-data-" . $sampleVersion . "/* . ; rm -rf magento-sample-data-" . $sampleVersion);
-		shell_exec("chmod -R 777 media/catalog");
-		if(!isset($argv[3]) AND $argv[3]!="null") {
-			echo "Import the magento-sample-data-" . $sampleVersion .".sql file into an empty database.\n";
-		} else {
-			shell_exec("mysql " . $argv[3] . " < magento_sample_data_for_" . $sampleVersion . ".sql");
-			echo "Magento sample data file imported into " . $argv[3] . "\n";
-		}
+        shell_exec("cp -R magento-sample-data-" . $sampleVersion . "/* . ; rm -rf magento-sample-data-" . $sampleVersion);
+        shell_exec("chmod -R 777 media/catalog");
+        if(!isset($argv[3]) AND $argv[3]!="null") {
+            echo "Import the magento-sample-data-" . $sampleVersion .".sql file into an empty database.\n";
+        } else {
+            shell_exec("mysql " . $argv[3] . " < magento_sample_data_for_" . $sampleVersion . ".sql");
+            echo "Magento sample data file imported into " . $argv[3] . "\n";
+        }
         }
         break;
     case 'devurl':
@@ -445,10 +445,104 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         }
         if(!$conflicts) echo 'No conflicts were found. Beware; this does not mean there aren\'t any conflicts, just that they haven\'t been found! Use the force, read the source.' . "\n";
     break;
+    case 'translations':
+        if(count($argv)<3) {
+            echo "Use 'mate translate Package Module'\n\n";
+            exit;
+        }
+        Mage::app();
+        $package = $argv[2];
+        $module = $argv[3];
+        if(isset($argv[4])) {
+            $language = $argv[4];
+        } else {
+            $language = 'nl_NL';
+        }
+        $modInfo =  modInfo($root,$package,$module);
+        if($modInfo) {
+            echo "\nAll found translation strings in the module ".$package."_".$module.":\n\n";
+            $dir = $root."/app/code/".$modInfo['codepool']."/".$package."/".$module."/";
+            $finds = shell_exec("find ".$dir." | xargs grep '__'");
+            $finds = explode("\n",$finds);
+            foreach($finds as $find) {
+                @list($filename,$foundtext) = explode(":",$find,2);
+                if($filename && $foundtext) {
+                    $filename = str_replace($dir,'',$filename);
+                    $filenameLengths[] = strlen($filename);
+                }
+            }
+            $name = $package.'_'.$module;
+            $configXml = $root . '/app/code/'.$modInfo['codepool'].'/'.$package.'/'.$module.'/etc/config.xml';
+            $translateFiles = array();
+            if(file_exists($configXml)) {
+                $configXml = simplexml_load_string(file_get_contents($configXml));
+                if(is_object($configXml) AND isset($configXml->adminhtml) AND isset($configXml->adminhtml->translate->modules->{$name}->files)) {
+                    $translateFiles[] = $configXml->adminhtml->translate->modules->{$name}->files->default;
+                }
+                if(is_object($configXml) AND isset($configXml->adminhtml) AND isset($configXml->frontend->translate->modules->{$name}->files)) {
+                    $translateFiles[] = $configXml->frontend->translate->modules->{$name}->files->default;
+                }
+            }
+            foreach($translateFiles as $transFile) {
+                if (($handle = fopen($root.'/app/locale/'.$language.'/'.$transFile, "r")) !== FALSE) {
+                    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                        if(count($data)==2) {
+                            $translations[$data[0]] = $data[1];
+                        }
+                    }
+                }
+            }
+            $maxLength = max($filenameLengths);
+            foreach($finds as $find) {
+                @list($filename,$foundtext) = explode(":",$find,2);
+                if($filename && $foundtext) {
+                    $filename = str_replace($dir,'',$filename);
+                    $foundtext = trim($foundtext);
+                    $beginTrans = stripos($foundtext,'__(\'');
+
+                    if($beginTrans) {
+                        echo str_pad($filename.": ",($maxLength+10),' ',STR_PAD_RIGHT);
+                        $foundtext = stripslashes($foundtext);
+                        $foundtext = substr($foundtext,$beginTrans+4);
+                        $endTrans = stripos($foundtext,'\'');
+                        $foundtext = substr($foundtext,0,$endTrans);
+                        echo $foundtext;
+                        echo "\n";
+                        $translation = $translations[$foundtext];
+                        if($translation==$foundtext || !$translation) {
+                            $translation = "NOT FOUND";
+                        }
+                        echo str_pad(" ",$maxLength+10,' ',STR_PAD_RIGHT)."Translation ".$language.": " . $translation;
+                        echo "\n";
+                        echo str_pad("=",$maxLength+50,'=',STR_PAD_RIGHT);
+                        echo "\n";
+                    }
+                }
+            }
+        }
+
+    break;
+    case 'modinfo':
+        if(count($argv)<3) {
+            echo "Use 'mate modinfo Package Module'\n\n";
+            exit;
+        }
+        $package = $argv[2];
+        $module = $argv[3];
+        $modInfo =  modInfo($root,$package,$module);
+        if($modInfo) {
+            echo "Module information ".$package."_".$module."\n";
+            foreach($modInfo as $key=>$value) {
+                echo $key.": ".$value."\n";
+            }
+        } else {
+            echo "Module ".$package."_".$module." is not found in this installation.\n";
+        }
+    break;
     default;
         print "\nMate (command line Magento toolkit) - by Elgentos <peterjaap@elgentos.nl>\n\n";
         print "mate index/indexer <default indexer options> (run 'mate indexer options' to see all options)\n";
-	print "mate reindexall - shortcut for mate index reindexall\n";
+    print "mate reindexall - shortcut for mate index reindexall\n";
         print "mate compiler <default compiler options> (run 'mate compiler' to see all options')\n";
         print "mate connect <default mage options> (run 'mate connect' to see all options)\n";
         print "mate modules / mate mod - overview the module list\n";
@@ -465,55 +559,78 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate connect {arguments} - use default 'mage' exec to interface Magento Connect\n";
         print "mate install channelName packageName - install packages using default 'mage' exec\n";
         print "mate user - create an admin account, will prompt for username, pass, email and name\n";
-	print "mate passwd - change password for a user, will prompt for username & pass\n";
-	print "mate minstall {version} {db_name} {sample} {sampleversion}- install Magento (use '1600' or '1.6.2.0' for {version}).  Give up {db_name} to automatically create database. Use 'sample' for {sample} to download sample data file.\n";
+    print "mate passwd - change password for a user, will prompt for username & pass\n";
+    print "mate minstall {version} {db_name} {sample} {sampleversion}- install Magento (use '1600' or '1.6.2.0' for {version}).  Give up {db_name} to automatically create database. Use 'sample' for {sample} to download sample data file.\n";
         print "mate resetmods - reset all permissions of dirs to 775 and files to 664\n";
         print "mate devurl - set the secure & unsecure base url to {{base_url}} for during development\n";
         print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
         print "mate conflicts - looks through all third party modules and checks for possible conflicts\n";
-	print "mate events - look for all events that are available within this installation\n";
+    print "mate events - look for all events that are available within this installation\n";
         print "mate logs [enable/disable] / [on/off] - enable/disable logging to var/log/system.log\n";
-	print "mate backup - create a backup of the current database (saves to database.sql)\n";
-	print "mate import {filename} - import a backup into the current database (caution; will drop all tables). When filename is omitted, 'database.sql' is assumed\n";
+    print "mate backup - create a backup of the current database (saves to database.sql)\n";
+    print "mate import {filename} - import a backup into the current database (caution; will drop all tables). When filename is omitted, 'database.sql' is assumed\n";
+        print "mate translations {package} {module} {language} - find untranslated translation strings in a module for any given language. Language defaults to 'nl_NL'\n";
 
         print "\nCurrent root dir is ".$root."\n";
         print "\n";
     break;
 }
 
+function modInfo($root,$package,$module) {
+    $modinfo = moduleOverview($root,true);
+    $modinfo = explode("\n",$modinfo);
+    $data = array();
+    foreach($modinfo as $mod) {
+        @list($data['name'],$data['stats'],$data['codepool'],$data['version']) = explode("\t",$mod);
+        $data['name'] = trim($data['name']);
+        $data['stats'] = trim($data['stats']);
+        $data['codepool'] = trim($data['codepool']);
+        $data['version']  = trim($data['version']);
+        if($data['name']==$package."_".$module) {
+            return $data;
+        }
+    }
+    return false;
+}
+
 function isModuleEnabled($filename) {
     return !stripos(file_get_contents($filename),">false<");
 }
 
-function moduleOverview($root) {
+function moduleOverview($root,$tabs=false) {
+    $return = null;
     foreach(explode("\n",shell_exec('ls '.$root."/app/etc/modules")) as $xml) {
         if(!empty($xml)) {
             $name = str_replace(".xml","",$xml);
-            echo str_pad($name,50," ",STR_PAD_RIGHT);
+            $return .= str_pad($name,50," ",STR_PAD_RIGHT);
+            if($tabs) { $return .= "\t"; }
             $filename = $root."/app/etc/modules/".$xml;
             if(isModuleEnabled($filename)) { $status = "enabled"; } else { $status = "disabled"; }
-            echo str_pad($status,15," ",STR_PAD_RIGHT);
+            $return .= str_pad($status,15," ",STR_PAD_RIGHT);
+            if($tabs) { $return .= "\t"; }
 
             if(!stripos(file_get_contents($filename),">local<")) {
                 $codepool = 'community';
             } else {
                 $codepool = 'local';
             }
-            echo str_pad($codepool,15," ",STR_PAD_RIGHT);
+            $return .= str_pad($codepool,15," ",STR_PAD_RIGHT);
+            if($tabs) { $return .= "\t"; }
             $configXml = $root . '/app/code/'.$codepool.'/'.str_replace("_","/",$name).'/etc/config.xml';
             if(file_exists($configXml)) {
                 $configXml = simplexml_load_string(file_get_contents($configXml));
                 if(is_object($configXml) AND isset($configXml->modules) AND isset($configXml->modules->{$name})) {
-                    echo $configXml->modules->{$name}->version;
+                    $return .= $configXml->modules->{$name}->version;
                 } else {
-                    echo "N/A";
+                    $return .= "N/A";
                 }
             } else {
-                echo "N/A";
+                $return .= "N/A";
             }
         }
-        echo "\n";
+        $return .= "\n";
     }
+    return $return;
 }
 
 function connectDb($root) {

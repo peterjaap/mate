@@ -42,8 +42,10 @@ mate events - look for all events that are available within this installation
 mate logs [enable/disable] / [on/off] - enable/disable logging to var/log/system.log  
 mate backup - create a backup of the current database (saves to database.sql)  
 mate import {filename} - import a backup into the current database (caution; will drop all tables). When filename is omitted, 'database.sql' is assumed  
+mate translations {package} {module} {language} - find untranslated translation strings in a module for any given language. Language defaults to 'nl_NL'  
 
 ## Changelog ##
+31-10-2012: Added 'mate translations' to find untranslated strings in a module easily  
 28-10-2012: Added sample data option to 'mate minstall'  
 23-10-2012: Added change password 'passwd' action  
 10-10-2012: Added codepool & version to 'mate mod' listing & fixed minor bugs when using mate in a non-Magento environment  
