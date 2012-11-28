@@ -23,8 +23,8 @@ mate enable Package_Module - enable a module
 mate disable Package_Module - disable a module  
 mate toggle Package_Module - toggle the status of a module  
 mate skeleton Package Module Version - create a skeleton module for development  
-mate backup - make a database dump to database.sql  
-mate import - import a backupped database  
+mate backup {absolute_path} - make a database dump to database-TIMESTAMP.sql or, if absolute_path is specified, to that path (ie /home/backups/backupfile.sql)  
+mate import {sqlfilename} - import a backupped database - if sqlfilename is ommitted, database.sql will be assumed  
 mate events - list all events (for observers) found in the codebase/  
 mate cc/cache - clear cache  
 mate cs/session(s) - clear sessions  

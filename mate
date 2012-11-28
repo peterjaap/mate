@@ -152,26 +152,31 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         echo shell_exec("tail -n ".$lines." ".$root."/var/log/".$filename);
         break;
     case 'backup':
-        $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
+	$outputFile = 'database-' . date('Ymdhis') . '.sql';
+	if(isset($argv[2])) { $outputFile = $argv[2]; }
+	$path = explode("/",$outputFile);
+	$path = implode("/",array_slice($path,0,-1));
+        if(strlen($path)>2) { $path .= '/'; }
+	$local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
         $info = (array)$local->global->resources->default_setup->connection;
         $ignoreTables = array('log_customer','log_visitor','log_visitor_info','log_visitor_online','log_url','log_url_info','log_quote','report_viewed_product_index','report_compared_product_index','report_event','catalog_compare_item');
         $dumpCommand = "mysqldump -u ".$info['username']." -p".$info['password']." --skip-extended-insert ";
         foreach($ignoreTables as $ignoreTable) {
             $dumpCommand .= " --ignore-table=".$info['dbname'].".".$ignoreTable;
         }
-        $dumpCommand .= " ".$info['dbname'] . " > database.sql";
+        $dumpCommand .= " ".$info['dbname'] . " > ".$outputFile;
         shell_exec($dumpCommand);
 
         $dumpCommand = "mysqldump -u ".$info['username']." -p".$info['password']." --no-data=true --skip-extended-insert ".$info['dbname'] . " ";
         foreach($ignoreTables as $ignoreTable) {
             $dumpCommand .= $ignoreTable." ";
         }
-        $dumpCommand .= " > ignoredStructure.sql";
+        $dumpCommand .= " > " . $path . "ignoredStructure.sql";
         shell_exec($dumpCommand);
-        shell_exec('cat ignoredStructure.sql >> database.sql');
-        shell_exec('rm ignoredStructure.sql');
+        shell_exec('cat '.$path.'ignoredStructure.sql >> '.$outputFile);
+        shell_exec('rm '.$path.'ignoredStructure.sql');
         
-        print "\nBackup made at ".date("d-m-Y H:i:s")."; filename is database.sql\n\n";
+        print "\nBackup made at ".date("d-m-Y H:i:s")."; filename is ".$outputFile."\n\n";
         break;
     case 'import':
         $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
