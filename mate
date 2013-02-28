@@ -136,7 +136,8 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
     case 'resetmods':
         shell_exec("find ".$root." -type d -exec chmod 775 {} \;");
         shell_exec("find ".$root." -type f -exec chmod 664 {} \;");
-        echo "\nPermissions are reset.\n\n";
+        shell_exec("chmod 660 ".$root."/app/etc/local.xml");
+	echo "\nPermissions are reset.\n\n";
         break;
     case 'log':
         if(isset($argv[2])) {
