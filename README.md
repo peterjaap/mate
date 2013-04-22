@@ -36,7 +36,8 @@ mate passwd - change password for a user, will prompt for username & pass
 mate minstall {version} {db_name} {sample} {sampleversion}- install Magento (use '1600' or '1.6.2.0' for {version}).  Give up {db_name} to automatically create database. Use 'sample' for {sample} to download sample data file.  
 mate resetmods - reset all permissions of dirs to 775 and files to 664  
 mate devurl - set the secure & unsecure base url to {{base_url}} for during development  
-mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin  
+mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin
+mate baseurl {baseURL} [secure/unsecure/leave empty for both] - set a new base url (both secure and unsecure or one of each) for the current installation  
 mate conflicts - looks through all third party modules and checks for possible conflicts  
 mate events - look for all events that are available within this installation  
 mate logs [enable/disable] / [on/off] - enable/disable logging to var/log/system.log  

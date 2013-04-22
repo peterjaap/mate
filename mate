@@ -227,6 +227,42 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             echo "Template hints are now disabled.\n\n";
         }
         break;
+    case 'baseurl':
+        connectDb($root);
+        if(empty($argv[2])) {
+            die("No base URL defined. Please give new base URL as second parameter.\n");
+        } else {
+            if (filter_var($argv[2], FILTER_VALIDATE_URL) === FALSE) {
+                die("Not a valid URL\n");
+            } else {
+                $baseurl = $argv[2];
+            }
+        }
+        if(substr($baseurl,-1)!='/') {
+            die("The base URL has no trailing slash!\n");
+        }
+        if(isset($argv[3])) {
+            if(stripos($argv[3],"un")!==false) {
+                $type = 'unsecure';
+            } else {
+                $type = 'secure';
+            }
+        } else {
+            $type = 'secure & unsecure';
+        }
+        if(isset($type) && $type == 'secure') {
+            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/secure/base_url'");
+        } elseif(isset($type) && $type == 'unsecure') {
+            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url'");   
+        } else {
+            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url' OR path = 'web/unsecure/base_url'");
+        }
+        if($result) {
+            echo 'Base URL ('.$type.') is updated to '.$baseurl."\n";
+        } else {
+            echo "Could not update base URL.";
+        }
+        break;
     case 'events':
         echo shell_exec("grep -r 'Mage::dispatchEvent(' . | sed -e 's/.*Mage::dispatchEvent(//; s/,.*//; s/).*//;' | sed -e \"s/'//g;\" | grep -v '[^a-z_]' | grep -vE '^$' | sort | uniq -c");
         break;
@@ -593,6 +629,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         print "mate resetmods - reset all permissions of dirs to 775 and files to 664\n";
         print "mate devurl - set the secure & unsecure base url to {{base_url}} for during development\n";
         print "mate hints (admin/scope id/leave empty) on/off - turn the template hints on and off for store or admin\n";
+        print "mate baseurl {baseURL} [secure/unsecure] - set a new base url (both secure and unsecure or one of each) for the current installation\n";
         print "mate conflicts - looks through all third party modules and checks for possible conflicts\n";
     print "mate events - look for all events that are available within this installation\n";
         print "mate logs [enable/disable] / [on/off] - enable/disable logging to var/log/system.log\n";
