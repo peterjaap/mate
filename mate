@@ -118,19 +118,32 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                 }
                 exit;
             }
-            if(stripos($argv[2],"_")!==false) {
-                $filename = $argv[2].".xml";
+            if(stripos($argv[2],"*")!==false) {
+                foreach(glob($root.'/app/etc/modules/'.$argv[2]) as $moduleXml) {
+                    $filename = array_pop(explode("/",$moduleXml));
+                    if(isModuleEnabled($moduleXml)) {
+                        shell_exec("sed -i 's/true/false/' ".$moduleXml);
+                        echo "\nModule ".str_replace(".xml","",$filename)." is now disabled\n\n";
+                    } else {
+                        shell_exec("sed -i 's/false/true/' ".$moduleXml);
+                        echo "\nModule ".str_replace(".xml","",$filename)." is now enabled\n\n";
+                    }                    
+                }
             } else {
-                if(empty($argv[3])) { echo "Missing arguments"; exit; }
-                $filename = $argv[2]."_".$argv[3].".xml";
-            }
-            $moduleXml = $root."/app/etc/modules/".$filename;
-            if(isModuleEnabled($moduleXml)) {
-                shell_exec("sed -i 's/true/false/' ".$moduleXml);
-                echo "\nModule ".str_replace(".xml","",$filename)." is now disabled\n\n";
-            } else {
-                shell_exec("sed -i 's/false/true/' ".$moduleXml);
-                echo "\nModule ".str_replace(".xml","",$filename)." is now enabled\n\n";
+                if(stripos($argv[2],"_")!==false) {
+                    $filename = $argv[2].".xml";
+                } else {
+                    if(empty($argv[3])) { echo "Missing arguments"; exit; }
+                    $filename = $argv[2]."_".$argv[3].".xml";
+                }
+                $moduleXml = $root."/app/etc/modules/".$filename;
+                if(isModuleEnabled($moduleXml)) {
+                    shell_exec("sed -i 's/true/false/' ".$moduleXml);
+                    echo "\nModule ".str_replace(".xml","",$filename)." is now disabled\n\n";
+                } else {
+                    shell_exec("sed -i 's/false/true/' ".$moduleXml);
+                    echo "\nModule ".str_replace(".xml","",$filename)." is now enabled\n\n";
+                }
             }
         break;
     case 'resetmods':
