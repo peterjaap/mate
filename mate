@@ -18,8 +18,8 @@ if(stripos($pwd,$DS.'app')!==false) {
         array_pop($pathParts);
     }
 }
-if(!$root AND ((!isset($argv[1]) || (isset($argv[1]) AND $argv[1]!="minstall")))) {
-    print "\nMagento installation not recognized; are you in the correct directory?\n\n";
+if(!$root AND ((!isset($argv[1]) || (isset($argv[1]) AND $argv[1]!="minstall") && (isset($argv[1]) AND $argv[1]!="help")))) {
+    print "\nMagento installation not recognized; are you in the correct directory?\n\nRun 'mate help' to show all available commands.\n\n";
     exit;
 }
 
@@ -650,7 +650,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
     print "mate import {filename} - import a backup into the current database (caution; will drop all tables). When filename is omitted, 'database.sql' is assumed\n";
         print "mate translations {package} {module} {language} - find untranslated translation strings in a module for any given language. Language defaults to 'nl_NL'\n";
 
-        print "\nCurrent root dir is ".$root."\n";
+        if(!empty($root)) { print "\nCurrent root dir is ".$root."\n"; }
         print "\n";
     break;
 }
