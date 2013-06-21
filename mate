@@ -166,15 +166,20 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         echo shell_exec("tail -n ".$lines." ".$root."/var/log/".$filename);
         break;
     case 'backup':
+    $skipExtendedInsert = false;
 	$outputFile = 'database-' . date('Ymdhis') . '.sql';
 	if(isset($argv[2])) { $outputFile = $argv[2]; }
+	if(isset($argv[3])) { $skipExtendedInsert = true; }
 	$path = explode("/",$outputFile);
 	$path = implode("/",array_slice($path,0,-1));
         if(strlen($path)>2) { $path .= '/'; }
 	$local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
         $info = (array)$local->global->resources->default_setup->connection;
         $ignoreTables = array('log_customer','log_visitor','log_visitor_info','log_visitor_online','log_url','log_url_info','log_quote','report_viewed_product_index','report_compared_product_index','report_event','catalog_compare_item');
-        $dumpCommand = "mysqldump -u ".$info['username']." -p".$info['password']." --skip-extended-insert ";
+        $dumpCommand = "mysqldump -u ".$info['username']." -p".$info['password'];
+        if($skipExtendedInsert) {
+            $dumpCommand .= " --skip-extended-insert ";
+        }
         foreach($ignoreTables as $ignoreTable) {
             $dumpCommand .= " --ignore-table=".$info['dbname'].".".$ignoreTable;
         }
@@ -466,7 +471,8 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         foreach($modules as $module) {
             if(substr($module,0,4)=='Mage') continue; // skip core modules
             $xml = file_get_contents('app/etc/modules/' . $module);
-            $data = new SimpleXMLElement($xml);
+            if(!$xml) continue;
+	    $data = new SimpleXMLElement($xml);
             $moduleName = array_pop(array_keys(get_object_vars($data->modules)));
             if(stripos($moduleName,'_')!==false) {
                 list($vendor,$package) = explode('_',$moduleName);
@@ -484,6 +490,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                 continue;
             }
             $configFile = file_get_contents($configFilePath);
+	    if(!$configFile) continue;
             $config = new SimpleXMLElement($configFile);
             $areas = array('global','frontend','adminhtml');
             $elements = array('blocks','models');
