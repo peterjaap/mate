@@ -273,8 +273,16 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         } elseif(isset($type) && $type == 'unsecure') {
             $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url'");   
         } else {
-            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url' OR path = 'web/unsecure/base_url'");
+            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url' OR path = 'web/secure/base_url'");
         }
+        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}' WHERE path = 'web/secure/base_link_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}skin/' WHERE path = 'web/secure/base_skin_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}media/' WHERE path = 'web/secure/base_media_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}js/' WHERE path = 'web/secure/base_js_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}' WHERE path = 'web/unsecure/base_link_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}skin/' WHERE path = 'web/unsecure/base_skin_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}media/' WHERE path = 'web/unsecure/base_media_url'");
+        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}js/' WHERE path = 'web/un   secure/base_js_url'");
         if($result) {
             echo 'Base URL ('.$type.') is updated to '.$baseurl."\n";
         } else {
