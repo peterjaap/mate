@@ -150,7 +150,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         shell_exec("find ".$root." -type d -exec chmod 775 {} \;");
         shell_exec("find ".$root." -type f -exec chmod 664 {} \;");
         shell_exec("chmod 660 ".$root."/app/etc/local.xml");
-	echo "\nPermissions are reset.\n\n";
+    echo "\nPermissions are reset.\n\n";
         break;
     case 'log':
         if(isset($argv[2])) {
@@ -167,13 +167,13 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
         break;
     case 'backup':
     $skipExtendedInsert = false;
-	$outputFile = 'database-' . date('Ymdhis') . '.sql';
-	if(isset($argv[2])) { $outputFile = $argv[2]; }
-	if(isset($argv[3])) { $skipExtendedInsert = true; }
-	$path = explode("/",$outputFile);
-	$path = implode("/",array_slice($path,0,-1));
+    $outputFile = 'database-' . date('Ymdhis') . '.sql';
+    if(isset($argv[2])) { $outputFile = $argv[2]; }
+    if(isset($argv[3])) { $skipExtendedInsert = true; }
+    $path = explode("/",$outputFile);
+    $path = implode("/",array_slice($path,0,-1));
         if(strlen($path)>2) { $path .= '/'; }
-	$local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
+    $local = simplexml_load_string(file_get_contents($root."/app/etc/local.xml"), 'SimpleXMLElement', LIBXML_NOCDATA);
         $info = (array)$local->global->resources->default_setup->connection;
         $ignoreTables = array('log_customer','log_visitor','log_visitor_info','log_visitor_online','log_url','log_url_info','log_quote','report_viewed_product_index','report_compared_product_index','report_event','catalog_compare_item');
         $dumpCommand = "mysqldump -u ".$info['username']." -p".$info['password'];
@@ -248,45 +248,94 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
     case 'baseurl':
         connectDb($root);
         if(empty($argv[2])) {
-            die("No base URL defined. Please give new base URL as second parameter.\n");
+            //die("No base URL defined. Please give new base URL as second parameter.\n");
+            Mage::app();
+            $resource = Mage::getModel('core/resource');
+            $db = $resource->getConnection('core_write');
+            $stores = $db->fetchAll('SELECT * FROM core_store');
+            foreach($stores as $store) {
+                if($store['store_id'] == 1) continue;
+                if($store['store_id'] == 0) {
+                    $baseurls[$store['store_id']] = prompt("What is the default base URL?");
+                } else {
+                    $baseurls[$store['store_id']] = prompt("What is the base URL for store view '".$store['code']."' (".$store['store_id'].")? [leave empty for default]");
+                }
+            }
+            foreach($baseurls as $store_id=>$baseurl) {
+                if(isset($argv[3])) {
+                    if(stripos($argv[3],"un")!==false) {
+                        $type = 'unsecure';
+                    } else {
+                        $type = 'secure';
+                    }
+                } else {
+                    $type = 'secure & unsecure';
+                }
+                if(!empty($baseurl)) {
+                    if (filter_var($baseurl, FILTER_VALIDATE_URL) === FALSE) {
+                        die("Not a valid URL (" . $baseurl .")\n");
+                    }
+                    if(substr($baseurl,-1)!='/') {
+                        die("The base URL has no trailing slash! (" . $baseurl .")\n");
+                    }
+                    if(isset($type) && $type == 'secure') {
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/secure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
+                    } elseif(isset($type) && $type == 'unsecure') {
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/unsecure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));   
+                    } else {
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/secure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/unsecure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
+                    }
+                } else {
+                    $result = $db->query("DELETE FROM core_config_data WHERE (path = 'web/unsecure/base_url' OR path = 'web/secure/base_url') AND scope_id = ?",array($store_id));
+                }
+            }
+            $db->query("UPDATE core_config_data SET value = '{{secure_base_url}}' WHERE path = 'web/secure/base_link_url'");
+            $db->query("UPDATE core_config_data SET value = '{{secure_base_url}}skin/' WHERE path = 'web/secure/base_skin_url'");
+            $db->query("UPDATE core_config_data SET value = '{{secure_base_url}}media/' WHERE path = 'web/secure/base_media_url'");
+            $db->query("UPDATE core_config_data SET value = '{{secure_base_url}}js/' WHERE path = 'web/secure/base_js_url'");
+            $db->query("UPDATE core_config_data SET value = '{{unsecure_base_url}}' WHERE path = 'web/unsecure/base_link_url'");
+            $db->query("UPDATE core_config_data SET value = '{{unsecure_base_url}}skin/' WHERE path = 'web/unsecure/base_skin_url'");
+            $db->query("UPDATE core_config_data SET value = '{{unsecure_base_url}}media/' WHERE path = 'web/unsecure/base_media_url'");
+            $db->query("UPDATE core_config_data SET value = '{{unsecure_base_url}}js/' WHERE path = 'web/unsecure/base_js_url'");
         } else {
             if (filter_var($argv[2], FILTER_VALIDATE_URL) === FALSE) {
                 die("Not a valid URL\n");
             } else {
                 $baseurl = $argv[2];
             }
-        }
-        if(substr($baseurl,-1)!='/') {
-            die("The base URL has no trailing slash!\n");
-        }
-        if(isset($argv[3])) {
-            if(stripos($argv[3],"un")!==false) {
-                $type = 'unsecure';
-            } else {
-                $type = 'secure';
+            if(substr($baseurl,-1)!='/') {
+                die("The base URL has no trailing slash!\n");
             }
-        } else {
-            $type = 'secure & unsecure';
-        }
-        if(isset($type) && $type == 'secure') {
-            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/secure/base_url'");
-        } elseif(isset($type) && $type == 'unsecure') {
-            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url'");   
-        } else {
-            $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url' OR path = 'web/secure/base_url'");
-        }
-        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}' WHERE path = 'web/secure/base_link_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}skin/' WHERE path = 'web/secure/base_skin_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}media/' WHERE path = 'web/secure/base_media_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}js/' WHERE path = 'web/secure/base_js_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}' WHERE path = 'web/unsecure/base_link_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}skin/' WHERE path = 'web/unsecure/base_skin_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}media/' WHERE path = 'web/unsecure/base_media_url'");
-        mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}js/' WHERE path = 'web/un   secure/base_js_url'");
-        if($result) {
-            echo 'Base URL ('.$type.') is updated to '.$baseurl."\n";
-        } else {
-            echo "Could not update base URL.";
+            if(isset($argv[3])) {
+                if(stripos($argv[3],"un")!==false) {
+                    $type = 'unsecure';
+                } else {
+                    $type = 'secure';
+                }
+            } else {
+                $type = 'secure & unsecure';
+            }
+            if(isset($type) && $type == 'secure') {
+                $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/secure/base_url'");
+            } elseif(isset($type) && $type == 'unsecure') {
+                $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url'");   
+            } else {
+                $result = mysql_query("UPDATE core_config_data SET value = '".$baseurl."' WHERE path = 'web/unsecure/base_url' OR path = 'web/secure/base_url'");
+            }
+            mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}' WHERE path = 'web/secure/base_link_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}skin/' WHERE path = 'web/secure/base_skin_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}media/' WHERE path = 'web/secure/base_media_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{secure_base_url}}js/' WHERE path = 'web/secure/base_js_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}' WHERE path = 'web/unsecure/base_link_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}skin/' WHERE path = 'web/unsecure/base_skin_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}media/' WHERE path = 'web/unsecure/base_media_url'");
+            mysql_query("UPDATE core_config_data SET value = '{{unsecure_base_url}}js/' WHERE path = 'web/unsecure/base_js_url'");
+            if($result) {
+                echo 'Base URL ('.$type.') is updated to '.$baseurl."\n";
+            } else {
+                echo "Could not update base URL.";
+            }
         }
         break;
     case 'events':
@@ -480,7 +529,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
             if(substr($module,0,4)=='Mage') continue; // skip core modules
             $xml = file_get_contents('app/etc/modules/' . $module);
             if(!$xml) continue;
-	    $data = new SimpleXMLElement($xml);
+        $data = new SimpleXMLElement($xml);
             $moduleName = array_pop(array_keys(get_object_vars($data->modules)));
             if(stripos($moduleName,'_')!==false) {
                 list($vendor,$package) = explode('_',$moduleName);
@@ -498,7 +547,7 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                 continue;
             }
             $configFile = file_get_contents($configFilePath);
-	    if(!$configFile) continue;
+        if(!$configFile) continue;
             $config = new SimpleXMLElement($configFile);
             $areas = array('global','frontend','adminhtml');
             $elements = array('blocks','models');
