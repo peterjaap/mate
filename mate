@@ -278,13 +278,18 @@ echo "<?php\n\n\$installer = \$this;\n\$setup = new Mage_Catalog_Model_Resource_
                     if(substr($baseurl,-1)!='/') {
                         die("The base URL has no trailing slash! (" . $baseurl .")\n");
                     }
+		    if($store_id == 0) {
+			$scope = 'default';
+		    } else {
+			$scope = 'stores';
+		    }
                     if(isset($type) && $type == 'secure') {
-                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/secure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/secure/base_url', scope = '".$scope."' ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
                     } elseif(isset($type) && $type == 'unsecure') {
-                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/unsecure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));   
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/unsecure/base_url', scope = '".$scope."', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));   
                     } else {
-                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/secure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
-                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/unsecure/base_url', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/secure/base_url', scope = '".$scope."', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
+                        $result = $db->query("INSERT INTO core_config_data SET value = ?, path = 'web/unsecure/base_url', scope = '".$scope."', scope_id = ? ON DUPLICATE KEY UPDATE value = ?", array($baseurl,$store_id,$baseurl));
                     }
                 } else {
                     $result = $db->query("DELETE FROM core_config_data WHERE (path = 'web/unsecure/base_url' OR path = 'web/secure/base_url') AND scope_id = ?",array($store_id));
